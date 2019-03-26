@@ -11,14 +11,15 @@ class Client:
 
 
 class ServerSenderWorker(threading.Thread):
-	def __init__(self,server_sock, file_name, clients):
+	def __init__(self,server_sock, file_name,name_prefix, clients):
 		self.clients = clients
 		self.file_name = file_name
+		self.name_prefix = name_prefix
 		self.sock = server_sock
 		threading.Thread.__init__(self)
 
 	def run(self):
-		info = "{\"file_name\" : \"" + self.file_name + "\"}"
+		info = "{\"file_name\" : \"" + self.name_prefix + self.file_name + "\"}"
 		content = open(self.file_name, 'rb')
 		for client in self.clients:
 			self.sock.sendto(bytes(info), client.address)
@@ -68,9 +69,15 @@ class Server(threading.Thread):
 		clients = []
 		connection_worker = ServerConnectionWorker(clients)
 		connection_worker.start()
+		# while True:
+		file_name = raw_input('Please input the file name >')
+		period = input('Please input the period (seconds) >')
+		counter = 0
 		while True:
-			file_name = raw_input('Please input the file name >')
-			ServerSenderWorker(connection_worker.getSock(), file_name, clients).start()
+			ServerSenderWorker(connection_worker.getSock(), file_name, str(counter)+'-', clients).start()
+			counter+=1
+			time.sleep(period)
+
 
 def main():
 	svr = Server()
@@ -78,4 +85,5 @@ def main():
 
 if __name__=="__main__":
 	main()
+
 
